@@ -1,47 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SpotForm from './components/SpotForm';
 
 function App() {
-  const [spots, setSpots] = useState([
-    { id: "A1", tenant: "Jean Dupont", startDate: "2024-01-01", endDate: "2024-12-31", email: "jean@example.com", phone: "0601020304", isIndefinite: false },
-    { id: "A2", tenant: "Marie Martin", startDate: "2024-02-01", endDate: null, email: "marie@example.com", phone: "0602030405", isIndefinite: true },
-    { id: "B1", tenant: null, startDate: null, endDate: null, email: null, phone: null, isIndefinite: false }
-  ]);
-
+  const [spots, setSpots] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingSpot, setEditingSpot] = useState(null);
 
+  useEffect(() => {
+    const savedSpots = localStorage.getItem('parkingSpots');
+    if (savedSpots) {
+      setSpots(JSON.parse(savedSpots));
+    }
+  }, []);
+
   // Fonction pour créer/modifier une place
   const handleSpotSubmit = (data) => {
     if (editingSpot) {
-      setSpots(spots.map(spot => 
+      const newSpots = spots.map(spot => 
         spot.id === editingSpot.id ? data : spot
-      ));
+      );
+      setSpots(newSpots);
+      localStorage.setItem('parkingSpots', JSON.stringify(newSpots));
     } else {
-      // Vérifier si l'ID existe déjà
       if (spots.some(spot => spot.id === data.id)) {
         alert('Ce numéro de place existe déjà.');
         return;
       }
-      setSpots([...spots, data]);
+      const newSpots = [...spots, data];
+      setSpots(newSpots);
+      localStorage.setItem('parkingSpots', JSON.stringify(newSpots));
     }
     setShowForm(false);
     setEditingSpot(null);
   };
 
-  // Fonction pour supprimer une place
   const handleDelete = (spotId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette place ?')) {
-      setSpots(spots.filter(spot => spot.id !== spotId));
+      const newSpots = spots.filter(spot => spot.id !== spotId);
+      setSpots(newSpots);
+      localStorage.setItem('parkingSpots', JSON.stringify(newSpots));
     }
   };
 
-  // Fonction pour libérer une place
   const handleFreeSpot = (spotId) => {
     if (window.confirm('Êtes-vous sûr de vouloir libérer cette place ?')) {
-      setSpots(spots.map(spot => 
+      const newSpots = spots.map(spot => 
         spot.id === spotId ? {
           ...spot,
           tenant: null,
@@ -51,7 +56,9 @@ function App() {
           phone: null,
           isIndefinite: false
         } : spot
-      ));
+      );
+      setSpots(newSpots);
+      localStorage.setItem('parkingSpots', JSON.stringify(newSpots));
     }
   };
 
